@@ -79,6 +79,7 @@ function Game(ele, debugEle) {
     this.drawStartPage();
   }.bind(this))
   this.setUpControls(ele);
+  this.drawLoadingPage();
 }
 
 Game.WALL_WIDTH = 60;
@@ -140,13 +141,13 @@ Game.prototype.setUpControls= function (ele) {
   });
 }
 
-Game.prototype.drawLodingPage = function () {
+Game.prototype.drawLoadingPage = function () {
   if (this.loaded) {
     return;
   }
   this.clearStage();
   this.backgroundContainer.visible = false;
-  this.unit.visible = false;
+  this.unitContainer.visible = false;
   this.messageContainer.visible = true;
   this.loadingMessage.register();
 }
