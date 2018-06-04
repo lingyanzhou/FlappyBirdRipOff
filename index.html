@@ -1,0 +1,40 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+
+  <title>The HTML5 Herald</title>
+  <meta name="description" content="The HTML5 Herald" />
+  <meta name="author" content="SitePoint" />
+  <script src="lib/js/jquery-3.3.1.min.js"></script>
+  <script src="lib/js/matter.min.js"></script>
+  <script src="lib/js/pixi.min.js"></script>
+  <link href="lib/css/bootstrap.min.css" rel="stylesheet" />
+
+  <script src="js/GameObject.js"></script>
+  <script src="js/CustomMovement.js"></script>
+  <script src="js/Message.js"></script>
+  <script src="js/Sky.js"></script>
+  <script src="js/Bird.js"></script>
+  <script src="js/Wall.js"></script>
+  <script src="js/Game.js"></script>
+  <!--
+  <link rel="stylesheet" href="css/styles.css?v=1.0" />
+  <script src=""></script>
+  -->
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="p-3"></div>
+    <div class="row">
+      <div class="col"><canvas id="game"></canvas></div>
+      <div class="col" id="debug"></div>
+    </div>
+  </div>
+  <script>
+var game = new Game('#game', '#debug');
+  </script>
+</body>
+</html>
