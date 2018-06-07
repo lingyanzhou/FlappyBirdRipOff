@@ -1,8 +1,8 @@
-function CustomMovement (phxObj, func) {
-  this.phxObj = phxObj;
+function CustomMovement (gameObj, func) {
+  this.gameObj = gameObj;
   this.func = func;
 }
 
 CustomMovement.prototype.tick = function (dt) {
-  this.func(dt, this.phxObj)
+  this.func(this.gameObj, dt);
 }

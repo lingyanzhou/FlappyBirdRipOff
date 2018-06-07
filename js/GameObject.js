@@ -40,3 +40,7 @@ GameObject.prototype.unregister = function () {
     this.customMovementRegister.splice(this.customMovementRegister.indexOf(this.customMovement), 1);
   }
 }
+
+GameObject.prototype.destroy = function () {
+  this.sprite.destroy();
+}

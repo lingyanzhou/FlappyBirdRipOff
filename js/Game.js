@@ -53,13 +53,11 @@ function Game(ele, debugEle) {
   this.stage.addChild(this.backgroundContainer);
   this.stage.addChild(this.unitContainer);
   this.stage.addChild(this.messageContainer);
-  this.unitRegister = [];
   this.backgroundRegister = [];
   this.messageRegister = [];
   this.customMovementRegister = [];
   this.score = 0;
-  this.sky0 = null;
-  this.sky1 = null;
+  this.sky = null;
 
   this.bird = null;
   this.wallRegister = [];
@@ -107,14 +105,14 @@ Game.prototype.wallOpeningHeight = function () {
 Game.prototype.makeWallPair = function () {
   var openingSize = this.wallOpeningSize();
   var openingHeight = this.wallOpeningHeight();
-  var w1 = new Wall(this.phxEngine, this.unitContainer, [this.wallRegister, this.unitRegister], this.customMovementRegister, Game.WALL_WIDTH, Game.WALL_HEIGHT);
-  var w2 = new Wall(this.phxEngine, this.unitContainer, [this.wallRegister, this.unitRegister], this.customMovementRegister, Game.WALL_WIDTH, Game.WALL_HEIGHT);
+  var w1 = new Wall(this.phxEngine, this.unitContainer, [this.wallRegister], this.customMovementRegister, Game.WALL_WIDTH, Game.WALL_HEIGHT);
+  var w2 = new Wall(this.phxEngine, this.unitContainer, [this.wallRegister], this.customMovementRegister, Game.WALL_WIDTH, Game.WALL_HEIGHT);
 
-  w1.customMovement = new CustomMovement(w1.phxObj, function (dt, phxObj) {
-    Body.setPosition(phxObj, {x: phxObj.position.x-dt, y: phxObj.position.y});
+  w1.customMovement = new CustomMovement(w1, function (wall, dt) {
+    Body.setPosition(wall.phxObj, {x: wall.phxObj.position.x-dt, y: wall.phxObj.position.y});
   });
-  w2.customMovement = new CustomMovement(w2.phxObj, function (dt, phxObj) {
-    Body.setPosition(phxObj, {x: phxObj.position.x-dt, y: phxObj.position.y});
+  w2.customMovement = new CustomMovement(w2, function (wall, dt) {
+    Body.setPosition(wall.phxObj, {x: wall.phxObj.position.x-dt, y: wall.phxObj.position.y});
   });
   Body.setPosition(w1.phxObj, {x:Game.WIDTH + Game.WALL_WIDTH/2, y: openingHeight - openingSize/2 - Game.WALL_HEIGHT/2});
   Body.setPosition(w2.phxObj, {x:Game.WIDTH + Game.WALL_WIDTH/2, y: openingHeight + openingSize/2 + Game.WALL_HEIGHT/2});
@@ -157,14 +155,13 @@ Game.prototype.drawStartPage = function () {
     return;
   }
   this.clearStage();
-  this.sky0 = this.sky0 || new Sky(this.phxEngine, this.backgroundContainer, [this.backgroundRegister], null, 2*Game.WIDTH, Game.HEIGHT);
-  this.sky0.customMovement = null;
-  Body.setPosition(this.sky0.phxObj, {x:Game.WIDTH, y: Game.HEIGHT/2});
+  this.sky = new Sky(this.phxEngine, this.backgroundContainer, [this.backgroundRegister], this.customMovementRegister, Game.WIDTH, Game.HEIGHT);
+  this.sky.customMovement = null;
   this.backgroundContainer.visible = true;
   this.unitContainer.visible = false;
   this.messageContainer.visible = true;
   this.startMessage.register();
-  this.sky0.register();
+  this.sky.register();
 }
 
 Game.prototype.onClick = function () {
@@ -194,14 +191,20 @@ Game.prototype.clearStage = function () {
   if (!this.loaded) {
     return;
   }
-  for (var o of this.unitRegister.slice()) {
+  if (this.bird != null) {
+    this.bird.unregister();
+    this.bird.destroy();
+  }
+  for (var o of this.wallRegister.slice()) {
     o.unregister();
+    o.destroy();
   }
   for (var o of this.messageRegister.slice()) {
     o.unregister();
   }
   for (var o of this.backgroundRegister.slice()) {
     o.unregister();
+    o.destroy();
   }
   this.messageContainer.visible = false;
   this.unitContainer.visible = false;
@@ -216,22 +219,15 @@ Game.prototype.initGame = function () {
   this.app.ticker.start();
   this.clearStage();
   this.score = 0;
-  this.bird = this.bird || new Bird(this.phxEngine, this.unitContainer, [this.unitRegister], this.customMovementRegister, Game.BIRD_WIDTH, Game.BIRD_HEIGHT);
-  this.bird.customMovement = this.bird.customMovement || new CustomMovement(this.bird.phxObj, function (dt, phxObj) {
-    Body.setAngle(phxObj, Math.atan2(phxObj.velocity.y, phxObj.velocity.x+4));
+  this.bird = new Bird(this.phxEngine, this.unitContainer, [], this.customMovementRegister, Game.BIRD_WIDTH, Game.BIRD_HEIGHT);
+  this.bird.customMovement = this.bird.customMovement || new CustomMovement(this.bird, function (bird, dt) {
+    Body.setAngle(bird.phxObj, Math.atan2(bird.phxObj.velocity.y, bird.phxObj.velocity.x+4));
   });
 
-  this.sky1 = this.sky1 || new Sky(this.phxEngine, this.backgroundContainer, [this.backgroundRegister], this.customMovementRegister, 2*Game.WIDTH, Game.HEIGHT);
-  this.sky1.customMovement = this.sky1.customMovement || new CustomMovement(this.sky1.phxObj, function (dt, phxObj) {
-    var newX = phxObj.position.x -= dt/2;
-    if (newX<=0) {
-      Body.setPosition(phxObj, {x: Game.WIDTH, y: phxObj.position.y});
-    } else {
-      Body.setPosition(phxObj, {x: phxObj.position.x-dt/2, y: phxObj.position.y});
-    }
+  this.sky = new Sky(this.phxEngine, this.backgroundContainer, [this.backgroundRegister], this.customMovementRegister, Game.WIDTH, Game.HEIGHT);
+  this.sky.customMovement = new CustomMovement(this.sky, function (sky, dt) {
+    sky.sprite.tilePosition.x -= dt/2;
   });
-
-  Body.setPosition(this.sky1.phxObj, {x:Game.WIDTH, y: Game.HEIGHT/2});
   Body.setPosition(this.bird.phxObj, Game.BIRDINITPOS);
   Body.setVelocity(this.bird.phxObj, {x: 0, y: 0});
   this.messageContainer.visible = true;
@@ -239,7 +235,7 @@ Game.prototype.initGame = function () {
   this.backgroundContainer.visible = true;
   this.scoreMessage.register();
   this.bird.register();
-  this.sky1.register();
+  this.sky.register();
 };
 
 Game.prototype.flap = function () {
@@ -270,7 +266,9 @@ Game.prototype.tickGame = function (dt) {
     }
   }
 
-  for (var o of this.unitRegister) {
+  this.bird.updateView();
+
+  for (var o of this.wallRegister) {
     o.updateView(dt);
   }
   for (var o of this.backgroundRegister) {
@@ -289,9 +287,6 @@ Game.prototype.tickNonGame = function (dt) {
     c.tick(dt);
   }
 
-  for (var o of this.unitRegister) {
-    o.updateView(dt);
-  }
   for (var o of this.backgroundRegister) {
     o.updateView(dt);
   }

@@ -8,17 +8,10 @@ var Engine = Engine || Matter.Engine,
 
 function Sky(phxEngine, stage, objRegisters, customMovementRegister, width, height) {
   GameObject.call(this, phxEngine, stage, objRegisters, customMovementRegister);
-  this.phxObj = Bodies.rectangle(0, 0, width, height, {
-    isStatic: true,
-    collisionFilter: {
-      mask: 0x0
-    }
-  });
-  this.sprite.texture = Sky.TEXTURES[0];
-  this.sprite.anchor.set(0.5, 0.5);
-  this.sprite.width = width;
-  this.sprite.height = height;
 
+  this.sprite = new PIXI.extras.TilingSprite(Sky.TEXTURES[0], width, height);
+  this.sprite.tileScale.y = 2.5;
+  this.sprite.tileScale.x = 2;
   this.customMovement = null;
 }
 Sky.prototype = Object.create(GameObject.prototype);
@@ -40,7 +33,22 @@ Sky.onResourceLoaded = function (loader, resources) {
   }
 }
 
-Sky.prototype.updateView = function () {
-  this.sprite.x = this.phxObj.position.x;
-  this.sprite.y = this.phxObj.position.y;
+Sky.prototype.register = function () {
+  this.stage.addChild(this.sprite);
+  for (r of this.objRegisters) {
+    r.push(this);
+  }
+  if (this.customMovementRegister != null && this.customMovement != null) {
+    this.customMovementRegister.push(this.customMovement);
+  }
+}
+
+Sky.prototype.unregister = function () {
+  this.stage.removeChild(this.sprite);
+  for (r of this.objRegisters) {
+    r.splice(r.indexOf(this), 1);
+  }
+  if (this.customMovementRegister != null && this.customMovement != null) {
+    this.customMovementRegister.splice(this.customMovementRegister.indexOf(this.customMovement), 1);
+  }
 }
